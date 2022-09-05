@@ -11,6 +11,7 @@ const getStatus = async () => {
         if(res.ok){
             displayStatus(data.expiry)
         }else{
+            displayException(data)
             throw new Error(data.error)
         }
 }
@@ -21,8 +22,20 @@ const displayStatus = (data) => {
     resultsModal.show();
 }
 
+const processOptions = form => {
+    let options = [];
+    for(el of form.entries()){
+        if(el[0] === 'options'){
+            options.push(el[1])
+        }
+    }
+    form.delete('options');
+    form.append('options', options.join());
+    return form
+}
+
 const postForm = async () => {
-    const form = new FormData(document.getElementById('checksform'));
+    const form = processOptions(new FormData(document.getElementById('checksform')));
     const response = await fetch(API_URL, {
                         method: "POST",
                         headers: {
@@ -34,6 +47,7 @@ const postForm = async () => {
         if(response.ok){
             displayErrors(data);
         } else {
+            displayException(data)
             throw new Error(data.error)
         }               
 }
@@ -54,6 +68,18 @@ const displayErrors = (data) => {
     }
 
     document.getElementById("resultsModalTitle").innerText = heading;
+    document.getElementById("results-content").innerHTML = results;
+    resultsModal.show();
+}
+
+const displayException = data => {
+    let heading = `<div class="error-heading">An Exception Occurred</div>`;
+
+    results = `<div>The API returned status code ${data.status_code}</div>`;
+    results += `<div>Error number: <strong>${data.error_no}</strong></div>`;
+    results += `<div>Error text: <strong>${data.error}</strong></div>`;
+
+    document.getElementById("resultsModalTitle").innerHTML = heading;
     document.getElementById("results-content").innerHTML = results;
     resultsModal.show();
 }
